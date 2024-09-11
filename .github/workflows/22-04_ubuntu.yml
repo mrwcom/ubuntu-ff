@@ -64,7 +64,7 @@ jobs:
     - name: Fix ChromeRDP Group Not Found
       run: |
             sudo apt install --assume-yes --fix-broken
-            sudo adduser Ubuntu chrome-remote-desktop
+            sudo usermod -a -G chrome-remote-desktop $USER
     - name: generate script
       run: |
            touch setup.sh
