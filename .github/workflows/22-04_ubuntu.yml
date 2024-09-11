@@ -74,8 +74,8 @@ jobs:
 
     - name: Fix Chrome Remote Desktop Group Not Found Error
       run: |
-        sudo apt-get install -f
-        sudo apt install --assume-yes --fix-broken
+        # Create chrome-remote-desktop group if it doesn't exist
+        sudo groupadd chrome-remote-desktop || true
         sudo usermod -aG chrome-remote-desktop $USER
         sudo systemctl restart chrome-remote-desktop
 
