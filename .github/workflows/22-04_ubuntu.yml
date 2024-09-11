@@ -95,8 +95,10 @@ jobs:
         '
 
     - name: SSH Tunnel over Ngrok
+      env: 
+        authtoken : ${{ secrets.NGROK_AUTH_TOKEN }} 
       run: |
            curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list && sudo apt update && sudo apt install ngrok
-           ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
+           ngrok config add-authtoken "$AUTHTOKEN"
            sudo ufw allow 22/tcp
            ngrok tcp 22
