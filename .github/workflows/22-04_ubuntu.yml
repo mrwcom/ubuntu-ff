@@ -51,6 +51,7 @@ jobs:
             wget https://raw.githubusercontent.com/creationix/nvm/master/install.sh
             bash install.sh
             source ~/.profile
+            sudo apt install --assume-yes --fix-broken
             sudo adduser Ubuntu chrome-remote-desktop
     - name: generate script
       run: |
