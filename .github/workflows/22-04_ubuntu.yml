@@ -60,6 +60,10 @@ jobs:
             bash install.sh
             source ~/.profile
             sudo apt install --assume-yes --fix-broken
+            
+    - name: Fix ChromeRDP Group Not Found
+      run: |
+            sudo apt install --assume-yes --fix-broken
             sudo adduser Ubuntu chrome-remote-desktop
     - name: generate script
       run: |
