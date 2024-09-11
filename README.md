@@ -1,6 +1,4 @@
 # Ubuntu RDP  
-
-
 This is just for Testing and Deployment of Applications, and Debugging Purpose. I do not encourage to misuse of Github Actions! **I am not respossible if your  account gets banned!**
 </br>
 
@@ -9,7 +7,9 @@ This is just for Testing and Deployment of Applications, and Debugging Purpose. 
 
  1. *Github account*
  2. *Google account*
- 3. **Brain!**
+ 3. *NGROK Account*
+ 4. *Ngrok Authtoken as NGROK_AUTH_TOKEN in Github Actions Secrets*
+ 5. **Brain!**
 ## Steps
 
  1. *Fork this repo to your github account* 

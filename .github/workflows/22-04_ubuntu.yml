@@ -1,72 +1,104 @@
 name: ubunturdp
 on: 
   workflow_dispatch:
-   inputs:
-     auth:
+    inputs:
+      auth:
         description: 'GRDP Authorization Code'
         required: true
         default: 'paste your code here'
-  
+
 defaults:
   run:
     shell: bash
+
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
     - name: Creating User to Login
       run: |
-         sudo useradd -m ash && sudo adduser ash sudo && echo 'ash:ash' | sudo chpasswd
-     
-    - name: Installing Desktop Environment (wait for 10 min)
-      run: sudo apt update && sudo apt install expect ubuntu-desktop
-    - name: Installing Google Chrome Headless
-      run: |
-            sudo useradd -m Ubuntu 
-            sudo adduser Ubuntu sudo
-            echo 'Ubuntu:1234' | sudo chpasswd
-            sudo sed -i 's/\/bin\/sh/\/bin\/bash/g' /etc/passwd
-            sudo apt-get update
-            sudo apt-get install xfce4-terminal -y
-            wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
-            sudo dpkg --install chrome-remote-desktop_current_amd64.deb
-            sudo apt install --assume-yes --fix-broken
-            sudo DEBIAN_FRONTEND=noninteractive \
-            apt install --assume-yes xfce4 desktop-base
-            sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session'  
-            sudo apt install --assume-yes xscreensaver
-            sudo systemctl disable lightdm.service
-            wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo dpkg --install google-chrome-stable_current_amd64.deb
-            sudo apt install --assume-yes --fix-broken
-            sudo apt update && sudo apt -f install
-            sudo apt install python3-pip -y
-            sudo apt-get install -y xvfb 
-            pip3 install nbformat
-            pip3 install gdown
-            pip3 install pika
-            sudo apt install nautilus nano -y
-            wget -O code.deb https://code.visualstudio.com/sha/download\?build\=stable\&os\=linux-deb-x64
-            sudo dpkg --install code.deb
-            wget https://raw.githubusercontent.com/creationix/nvm/master/install.sh
-            bash install.sh
-            source ~/.profile
-            sudo adduser Ubuntu chrome-remote-desktop
-    - name: generate script
-      run: |
-           touch setup.sh
-           echo "${{ github.event.inputs.auth }}" >> "setup.sh"
-           chmod 777 setup.sh
-    - name: initialize GRDP
-      run: |   
-           expect -c '
-           spawn ./setup.sh
-           expect "Enter a PIN of at least six digits: "
-           send "123456\r"
-           expect "Enter the same PIN again: "
-           send "123456\r"
-           expect eof
-           '
-    - name: SSH tunnel over ngrok
-      uses: joshlarsen/ssh-tunnel-action@v1.2
+        sudo useradd -m ash
+        sudo adduser ash sudo
+        echo 'ash:ash' | sudo chpasswd
 
+    - name: Installing Desktop Environment (wait for 10 min)
+      run: |
+        sudo apt update
+        sudo apt install -y expect ubuntu-desktop
+
+    - name: Installing Google Chrome Headless and Dependencies
+      run: |
+        sudo useradd -m Ubuntu
+        sudo adduser Ubuntu sudo
+        echo 'Ubuntu:1234' | sudo chpasswd
+        sudo sed -i 's/\/bin\/sh/\/bin\/bash/g' /etc/passwd
+        sudo apt-get update
+        sudo apt-get install -y xserver-xorg-video-dummy xbase-clients python3-packaging python3-psutil xfce4-terminal
+        
+        # Adding Google Chrome's signing key and repository
+        curl https://dl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/chrome-remote-desktop.gpg
+        echo "deb [arch=amd64] https://dl.google.com/linux/chrome-remote-desktop/deb stable main" | sudo tee /etc/apt/sources.list.d/chrome-remote-desktop.list
+        
+        # Installing Chrome Remote Desktop and other software
+        sudo apt-get update
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install --assume-yes chrome-remote-desktop
+        
+        wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
+        sudo dpkg --install chrome-remote-desktop_current_amd64.deb
+        sudo apt install --assume-yes --fix-broken
+        
+        sudo DEBIAN_FRONTEND=noninteractive apt install --assume-yes xfce4 desktop-base
+        sudo bash -c 'echo "exec /etc/X11/Xsession /usr/bin/xfce4-session" > /etc/chrome-remote-desktop-session'
+        sudo apt install --assume-yes xscreensaver
+        
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo dpkg --install google-chrome-stable_current_amd64.deb
+        sudo apt install --assume-yes --fix-broken
+        
+        # Installing additional utilities
+        sudo apt install python3-pip -y
+        sudo apt-get install -y xvfb
+        pip3 install nbformat gdown pika
+        sudo apt install nautilus nano -y
+        
+        # Installing Visual Studio Code
+        wget -O code.deb https://code.visualstudio.com/sha/download\?build\=stable\&os\=linux-deb-x64
+        sudo dpkg --install code.deb
+        
+        # Installing NVM (Node Version Manager)
+        wget https://raw.githubusercontent.com/nvm-sh/nvm/master/install.sh
+        bash install.sh
+        source ~/.profile
+        sudo apt install --assume-yes --fix-broken
+
+    - name: Fix Chrome Remote Desktop Group Not Found Error
+      run: |
+        # Create chrome-remote-desktop group if it doesn't exist
+        sudo groupadd chrome-remote-desktop || true
+        sudo usermod -aG chrome-remote-desktop $USER
+
+    - name: Generate GRDP Authorization Script
+      run: |
+        echo "${{ github.event.inputs.auth }}" > setup.sh
+        chmod +x setup.sh
+
+    - name: Initialize GRDP
+      run: |   
+        expect -c '
+        spawn ./setup.sh
+        expect "Enter a PIN of at least six digits: "
+        send "123456\r"
+        expect "Enter the same PIN again: "
+        send "123456\r"
+        expect eof
+        '
+
+    - name: SSH Tunnel over Ngrok
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+      run: |
+           curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list && sudo apt update && sudo apt install ngrok
+           ngrok config add-authtoken $NGROK_AUTH_TOKEN
+           sudo ufw allow 22/tcp
+           ngrok tcp 22
