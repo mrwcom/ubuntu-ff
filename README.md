@@ -1,5 +1,5 @@
 # Ubuntu RDP  
-
+[![ubunturdp](https://github.com/BhaskarDevloper/rdpu/actions/workflows/22-04_ubuntu.yml/badge.svg?branch=main)](https://github.com/BhaskarDevloper/rdpu/actions/workflows/22-04_ubuntu.yml)
 
 This is just for Testing and Deployment of Applications, and Debugging Purpose. I do not encourage to misuse of Github Actions! **I am not respossible if your  account gets banned!**
 </br>
