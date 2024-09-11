@@ -27,6 +27,7 @@ jobs:
             echo 'Ubuntu:1234' | sudo chpasswd
             sudo sed -i 's/\/bin\/sh/\/bin\/bash/g' /etc/passwd
             sudo apt-get update
+            sudo apt-get install xserver-xorg-video-dummy xbase-clients python3-packaging python3-psutil
             sudo apt-get install xfce4-terminal -y
             wget https://dl.google.com/linux/direct/chrome-remote-desktop_current_amd64.deb
             sudo dpkg --install chrome-remote-desktop_current_amd64.deb
